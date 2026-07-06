@@ -32,7 +32,7 @@ TTL_SYMBOLS = 86400
 TTL_HISTORICAL_PAST = 86400
 TTL_HISTORICAL_CURRENT = 3600
 
-_DEFAULT_UA = f"psx-mcp-server/{__version__} (+https://github.com/ahemdraza-96/psx-mcp-server)"
+_DEFAULT_UA = f"psx-mcp-server/{__version__} (+https://github.com/ahmedraza-96/psx-mcp-server)"
 
 # httpx exceptions worth a retry (transient transport failures).
 _RETRYABLE_EXC = (

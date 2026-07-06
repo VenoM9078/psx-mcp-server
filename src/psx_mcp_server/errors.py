@@ -42,5 +42,5 @@ class ParseError(PSXError):
         super().__init__(
             f"Could not parse the PSX response for {what} — the website layout may have "
             f"changed. Please report this at "
-            f"https://github.com/ahemdraza-96/psx-mcp-server/issues."
+            f"https://github.com/ahmedraza-96/psx-mcp-server/issues."
         )

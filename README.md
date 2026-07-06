@@ -1,6 +1,6 @@
 # psx-mcp-server
 
-[![CI](https://github.com/ahemdraza-96/psx-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/ahemdraza-96/psx-mcp-server/actions/workflows/ci.yml)
+[![CI](https://github.com/ahmedraza-96/psx-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmedraza-96/psx-mcp-server/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/psx-mcp-server.svg)](https://pypi.org/project/psx-mcp-server/)
 [![Python](https://img.shields.io/pypi/pyversions/psx-mcp-server.svg)](https://pypi.org/project/psx-mcp-server/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -89,7 +89,7 @@ KSE100: 187,454.69 (+1.12%)
 ## Development
 
 ```bash
-git clone https://github.com/ahemdraza-96/psx-mcp-server
+git clone https://github.com/ahmedraza-96/psx-mcp-server
 cd psx-mcp-server
 uv sync
 

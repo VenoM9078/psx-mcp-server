@@ -18,7 +18,7 @@ import httpx
 
 BASE = "https://dps.psx.com.pk"
 FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
-USER_AGENT = "psx-mcp-server-fixture-recorder/0.1 (+https://github.com/ahemdraza-96/psx-mcp-server)"
+USER_AGENT = "psx-mcp-server-fixture-recorder/0.1 (+https://github.com/ahmedraza-96/psx-mcp-server)"
 DELAY_SECONDS = 1.0
 
 # (filename, method, path, form-data-or-None)
