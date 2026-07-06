@@ -36,16 +36,28 @@ TARGETS: list[tuple[str, str, str, dict[str, str] | None]] = [
     ("market_watch.html", "GET", "/market-watch", None),
     ("indices.html", "GET", "/indices", None),
     # A past month that definitely has data.
-    ("historical_HBL_2026_06.html", "POST", "/historical", {"month": "6", "year": "2026", "symbol": "HBL"}),
+    (
+        "historical_HBL_2026_06.html",
+        "POST",
+        "/historical",
+        {"month": "6", "year": "2026", "symbol": "HBL"},
+    ),
     # A far-future month — should come back empty; pins the empty-table shape.
-    ("historical_empty.html", "POST", "/historical", {"month": "1", "year": "2050", "symbol": "HBL"}),
+    (
+        "historical_empty.html",
+        "POST",
+        "/historical",
+        {"month": "1", "year": "2050", "symbol": "HBL"},
+    ),
 ]
 
 
 def main() -> None:
     FIXTURES.mkdir(parents=True, exist_ok=True)
     headers = {"User-Agent": USER_AGENT, "Accept": "text/html,application/json"}
-    with httpx.Client(base_url=BASE, headers=headers, timeout=30.0, follow_redirects=True) as client:
+    with httpx.Client(
+        base_url=BASE, headers=headers, timeout=30.0, follow_redirects=True
+    ) as client:
         for i, (name, method, path, data) in enumerate(TARGETS):
             if i:
                 time.sleep(DELAY_SECONDS)
@@ -53,7 +65,9 @@ def main() -> None:
             resp = client.request(method, path, data=data, headers=extra)
             out = FIXTURES / name
             out.write_text(resp.text, encoding="utf-8")
-            print(f"{method:4} {path:40} -> {name:32} [{resp.status_code}] {len(resp.text):>8} bytes")
+            print(
+                f"{method:4} {path:40} -> {name:32} [{resp.status_code}] {len(resp.text):>8} bytes"
+            )
 
 
 if __name__ == "__main__":
