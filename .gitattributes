@@ -1,0 +1,7 @@
+# Normalize line endings to LF for all text files so CI (Linux) and local
+# Windows checkouts agree — keeps ruff format --check and diffs stable.
+* text=auto eol=lf
+
+# Binary / recorded fixtures — leave untouched.
+*.png binary
+*.gif binary
