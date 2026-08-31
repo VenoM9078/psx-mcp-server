@@ -48,6 +48,7 @@ Changelog = "https://github.com/ahmedraza-96/psx-mcp-server/blob/main/CHANGELOG.
 
 [project.scripts]
 psx-mcp-server = "psx_mcp_server.server:main"
+psx-mcp-http = "psx_mcp_server.server:http_main"
 
 [dependency-groups]
 dev = [

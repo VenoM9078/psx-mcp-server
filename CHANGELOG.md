@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- Separate `psx-mcp-http` entry point for unauthenticated Streamable HTTP access to the
+  existing read-only server; the default stdio entry point is unchanged.
+
 ## [0.1.0] - 2026-07-07
 
 ### Added

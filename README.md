@@ -38,6 +38,22 @@ claude mcp add psx -- uvx psx-mcp-server
 **Any MCP client:** run `uvx psx-mcp-server` (stdio transport). Requires `uv`
 ([install guide](https://docs.astral.sh/uv/getting-started/installation/)).
 
+### Remote HTTP transport
+
+For a remote MCP client, run the same server over unauthenticated Streamable HTTP:
+
+```bash
+psx-mcp-http --host 127.0.0.1 --port 8000 \
+  --allowed-host psx.thisisroushan.com \
+  --allowed-host 'psx.thisisroushan.com:*'
+```
+
+The MCP endpoint is `http://127.0.0.1:8000/mcp`. Keep this backend on loopback and
+terminate TLS and apply rate limiting at the reverse proxy, exposing it externally as
+`https://psx.thisisroushan.com/mcp`. This entry point intentionally has no authentication:
+the server exposes public, read-only PSX data and does not accept trading or portfolio
+mutations. Do not expose the backend port directly to the Internet.
+
 ## Example
 
 > **You:** Which PSX stocks gained the most today, and what's HBL trading at?
