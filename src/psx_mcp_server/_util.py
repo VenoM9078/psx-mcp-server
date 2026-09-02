@@ -18,8 +18,20 @@ def to_pkt(unix_ts: int | float) -> datetime:
 
 
 def normalize_symbol(symbol: str) -> str:
-    """Uppercase and strip a ticker so 'hbl ' -> 'HBL'."""
-    return symbol.strip().upper()
+    """Uppercase and validate a ticker so ``'hbl '`` becomes ``'HBL'``.
+
+    The symbol is eventually interpolated into a path or form value. Keeping
+    this check at the shared boundary prevents path-like input from reaching
+    any endpoint while still allowing normal PSX punctuation.
+    """
+    if not isinstance(symbol, str):
+        raise ValueError("symbol must be a text ticker")
+    normalized = symbol.strip().upper()
+    if not re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{0,19}", normalized):
+        raise ValueError(
+            "Invalid PSX symbol. Use a ticker containing only letters, numbers, '.', '-' or '_'."
+        )
+    return normalized
 
 
 def parse_number(text: str | None) -> float | None:
@@ -30,9 +42,16 @@ def parse_number(text: str | None) -> float | None:
     """
     if text is None:
         return None
-    cleaned = text.strip().replace(",", "").replace("%", "").replace("Rs.", "").strip()
+    cleaned = (
+        text.strip().replace(",", "").replace("%", "").replace("Rs.", "").replace("−", "-").strip()
+    )
     if cleaned in ("", "-", "--", "N/A", "n/a"):
         return None
+    if cleaned.startswith("(") and cleaned.endswith(")"):
+        inner = cleaned[1:-1].strip()
+        if not inner:
+            return None
+        cleaned = inner if inner.startswith("-") else f"-{inner}"
     try:
         return float(cleaned)
     except ValueError:
@@ -45,7 +64,7 @@ def parse_int(text: str | None) -> int | None:
     return int(value) if value is not None else None
 
 
-_RANGE_NUMBER = re.compile(r"-?\d[\d,]*\.?\d*")
+_RANGE_NUMBER = re.compile(r"[-−+]?\d[\d,]*\.?\d*")
 
 
 def parse_range(text: str | None) -> tuple[float | None, float | None]:

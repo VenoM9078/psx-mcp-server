@@ -17,6 +17,10 @@ EXPECTED_TOOLS = {
     "get_company_info",
     "get_dividends",
     "get_announcements",
+    "get_financials",
+    "get_company_reports",
+    "get_company_alerts",
+    "get_price_performance",
 }
 
 

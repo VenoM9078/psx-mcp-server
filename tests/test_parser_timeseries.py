@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from psx_mcp_server.errors import ParseError
-from psx_mcp_server.parsers.timeseries import parse_eod, parse_intraday
+from psx_mcp_server.parsers.timeseries import (
+    parse_eod,
+    parse_eod_with_warnings,
+    parse_intraday,
+)
 
 
 def test_parse_intraday_first_tick(fixture):
@@ -49,3 +55,44 @@ def test_parse_eod_empty_data_returns_empty():
 def test_parse_intraday_malformed_raises(bad):
     with pytest.raises(ParseError):
         parse_intraday(bad)
+
+
+def test_parse_eod_skips_malformed_rows_and_deduplicates_dates():
+    timestamp = 1767355200
+    text = json.dumps(
+        {
+            "data": [
+                [timestamp],
+                ["bad", 10, 1, 10],
+                [timestamp, "bad", 1, 10],
+                [timestamp, 111, 100, 110],
+                [timestamp, 999, 999, 999],
+            ]
+        }
+    )
+
+    bars, warnings = parse_eod_with_warnings(text)
+
+    assert len(bars) == 1
+    assert bars[0].close == 111.0
+    assert bars[0].open == 110.0
+    assert bars[0].date == "2026-01-02"
+    assert any("malformed" in warning for warning in warnings)
+    assert any("duplicate" in warning for warning in warnings)
+
+
+def test_parse_timeseries_rejects_negative_and_boolean_numeric_fields():
+    text = json.dumps(
+        {
+            "data": [
+                [1767355200, -1, 1, 1],
+                [1767355200, 1, -1, 1],
+                [1767355200, True, 1, 1],
+            ]
+        }
+    )
+
+    bars, warnings = parse_eod_with_warnings(text)
+
+    assert bars == []
+    assert warnings == ["Skipped 3 malformed EOD row(s)."]

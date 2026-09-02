@@ -36,8 +36,9 @@ mcp = FastMCP(
     "psx",
     instructions=(
         "Live Pakistan Stock Exchange (PSX) data: quotes, intraday and end-of-day "
-        "history, indices (KSE-100 and others), company fundamentals, dividends and "
-        "announcements. Prices are in PKR; times are Pakistan Standard Time (UTC+5). "
+        "history, indices (KSE-100 and others), company summaries/reports, compliance "
+        "evidence, dividends, announcements, and close-only performance analytics. "
+        "Prices are in PKR; times are Pakistan Standard Time (UTC+5). "
         "If unsure of a ticker, call search_symbols first. Data is from the public "
         "PSX Data Portal and is informational only, not investment advice."
     ),

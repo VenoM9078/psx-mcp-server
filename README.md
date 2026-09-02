@@ -7,8 +7,9 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that gives Claude and other
 MCP agents live **Pakistan Stock Exchange** data — quotes, intraday and end-of-day history,
-indices (KSE-100 and 17 others), company fundamentals, dividends, and announcements — sourced
-from the public [PSX Data Portal](https://dps.psx.com.pk). No API key required.
+indices (KSE-100 and 17 others), company summaries, reports, compliance evidence, dividends,
+announcements, and close-only performance analytics — sourced from the public
+[PSX Data Portal](https://dps.psx.com.pk). No API key required.
 
 ## Quick start
 
@@ -78,15 +79,19 @@ KSE100: 187,454.69 (+1.12%)
 | Tool | Parameters | Returns |
 |------|------------|---------|
 | `search_symbols` | `query`, `sector?`, `limit=20` | Matching tickers (exact matches first). Use first if unsure of a ticker. |
-| `get_quote` | `symbol` | Current price, LDCP, OHL, change %, volume, bid/ask, 52-week range, P/E (PKR). |
+| `get_quote` | `symbol` | Current price, LDCP, OHL, signed change %, volume, bid/ask, 52-week range, P/E (PKR). Includes source/freshness metadata and P/E-basis warning. |
 | `get_intraday` | `symbol`, `interval="5min"`, `limit=50` | Intraday OHLCV bars (or `raw` ticks) for the latest session, PKT times. |
 | `get_eod_history` | `symbol`, `start_date?`, `end_date?`, `limit=260` | Daily open/close/volume (~5 yrs). Works for indices. No high/low. |
 | `get_ohlc_history` | `symbol`, `month`, `year` | Full daily OHLCV for one month — the only free source of daily high/low. |
-| `get_market_snapshot` | `category="gainers"`, `limit=15`, `sector?` | Top movers (`gainers`/`losers`/`volume`) plus market breadth. |
+| `get_market_snapshot` | `category="gainers"`, `limit=15`, `sector?` | Top movers (`gainers`/`losers`/`volume`) plus market-wide and, when filtered, sector-scoped breadth. |
 | `get_indices` | — | All ~18 PSX indices with change %. |
-| `get_company_info` | `symbol` | Business description, sector, market cap, shares, free float, P/E. |
-| `get_dividends` | `symbol`, `limit=10` | Payout history (cash/bonus/rights) with book-closure dates. |
-| `get_announcements` | `symbol`, `limit=10` | Recent corporate announcements with document (PDF) links. |
+| `get_company_info` | `symbol` | Business description, sector, market cap, shares, free float, P/E, and source/basis metadata. |
+| `get_dividends` | `symbol`, `limit=10` | Payout history with verbatim PSX notation, conservative cash/bonus/right classification, and book-closure dates. |
+| `get_announcements` | `symbol`, `limit=10`, `date_from?`, `date_to?`, `query?` | Globally date/time-sorted company announcements with raw type, PDF, image, and source metadata. |
+| `get_financials` | `symbol`, `view="all"`, `annual_limit=5`, `quarterly_limit=8` | Structured annual/quarterly company-page summary facts and ratios, with raw labels, units, scale, basis, and ambiguity warnings. |
+| `get_company_reports` | `symbol`, `fiscal_year?`, `limit=20` | Official report catalogue metadata (type, period ended, posting date, URL); does not download or parse PDFs. |
+| `get_company_alerts` | `symbol` | Current listing/status evidence for non-compliance, RWA, suspension, and winding-up using true/false/unknown states. |
+| `get_price_performance` | `symbol`, `windows?`, `benchmark_symbol="KSE100"`, `include_volume=true`, `include_volatility=true`, `include_drawdown=true` | Deterministic close-only returns, aligned benchmark returns, relative performance, volume, volatility, drawdown, and methodology. |
 
 **Resources:** `psx://symbols` (full ticker directory), `psx://sectors` (sector names),
 `psx://indices` (current index values).
@@ -99,8 +104,34 @@ KSE100: 187,454.69 (+1.12%)
 - **Prices are in PKR**; timestamps are Pakistan Standard Time (UTC+5, no DST).
 - PSX trades **Monday–Friday, ~09:30–15:30 PKT**. Outside those hours, quotes reflect the last
   session and intraday data may be empty.
-- Responses are cached briefly (30 s intraday … 24 h for the symbol directory) to be polite to
-  the portal. Override the request identity with the `PSX_MCP_USER_AGENT` environment variable.
+- The quote P/E is returned with `pe_basis="unconsolidated"` when PSX supplies it; it is not a
+  consolidated P/E. Company-page financial summaries use `basis="unknown"` unless the source
+  establishes a basis.
+- Company financial tables state **all numbers are in thousands (000's) except EPS**. Responses
+  preserve the displayed value, unit scale, and a separately labeled normalized value; EPS is
+  never multiplied by 1,000. Only confident amount metrics are scaled; unknown rows return
+  `unit="unknown"`, `unit_scale=null`, and `normalized_value=null`. Annual values are marked
+  `full_year`, while Q1/Q2/Q3 values remain `unknown` for standalone-versus-cumulative semantics.
+- Dividend strings such as `60%(i) (D)` remain verbatim. Percentages are not converted to PKR/share
+  because the event face value is not assumed; `cash_dividend_per_share` is null with a warning
+  when that input is unavailable.
+- `get_price_performance` uses EOD closes only: returns are close-to-close, volatility is annualized
+  sample standard deviation using `sqrt(252)`, and drawdown is the **maximum close-to-close
+  drawdown** (losses are negative). `1M/3M/6M` use calendar months, `1Y/3Y/5Y` use calendar
+  years, `1W` uses a seven-calendar-day target, and YTD starts at the last available close on or
+  before the prior year-end. Relative benchmark returns require exactly matching effective dates;
+  incomplete windows expose `complete=false`/`coverage="partial"`. Results are not dividend-adjusted,
+  and explicit split-adjustment semantics are not confirmed by the source.
+- Compliance outputs are evidence-based and tri-state. A generic hidden `.footer__rwaModal` is not
+  treated as an active Risk Warning Alert; absence of current evidence does not prove historical
+  absence.
+- Responses are cached briefly (30 s intraday, 5 min for shared company pages, 5–15 min for
+  announcements/listings, 1 h for EOD history, 24 h for reports, and 24 h for the symbol
+  directory) to be polite to the portal. Responses expose `source_fetched_at`, `served_at`,
+  `cache_age_seconds`, and `from_cache`, so a cache hit is not presented as a new upstream fetch.
+  Announcement pagination and all tool limits are bounded; per-client rate limiting for a public
+  deployment belongs at the reverse proxy. Override the request identity with the
+  `PSX_MCP_USER_AGENT` environment variable.
 
 ## Development
 

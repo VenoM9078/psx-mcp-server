@@ -3,7 +3,7 @@ schemas from type hints, and these are just JSON-safe data carriers."""
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 
 
@@ -123,6 +123,12 @@ class Announcement:
     date: str | None
     title: str
     pdf_url: str | None
+    time: str | None = None
+    symbol: str | None = None
+    category: str | None = None
+    raw_type: str | None = None
+    image_url: str | None = None
+    source: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -136,6 +142,11 @@ class Dividend:
     period: str
     details: str
     book_closure: str
+    action_type: str = "unknown"
+    cash_percentage: float | None = None
+    interim: bool | None = None
+    cash_dividend_per_share: float | None = None
+    warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -161,6 +172,148 @@ class EodBar:
     open: float
     close: float
     volume: int
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class FinancialPeriod:
+    """A conservative period descriptor for PSX's company summary tables."""
+
+    raw_label: str
+    normalized_period: str | None
+    fiscal_year: int | None
+    value_semantics: str
+    period_start: str | None
+    period_end: str | None
+    publication_date: str | None
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class FinancialFact:
+    """One source row/value from a financial summary or ratio table."""
+
+    period: str
+    raw_label: str
+    metric: str | None
+    raw_value: str
+    value: float | None
+    unit: str
+    unit_scale: int | None
+    normalized_value: float | None
+    source: str | None = None
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class FinancialSection:
+    """A bounded set of periods and facts from one company-page table."""
+
+    periods: list[FinancialPeriod] = field(default_factory=list)
+    facts: list[FinancialFact] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "periods": [p.to_dict() for p in self.periods],
+            "facts": [f.to_dict() for f in self.facts],
+            "warnings": self.warnings,
+        }
+
+
+@dataclass(slots=True)
+class FinancialSummary:
+    """Structured company-page summaries, deliberately not full statements."""
+
+    annual: FinancialSection
+    quarterly: FinancialSection
+    ratios: list[FinancialFact]
+    basis: str
+    unit_note: str
+    sources: list[dict]
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "annual": self.annual.to_dict(),
+            "quarterly": self.quarterly.to_dict(),
+            "ratios": [r.to_dict() for r in self.ratios],
+            "basis": self.basis,
+            "unit_note": self.unit_note,
+            "sources": self.sources,
+            "warnings": self.warnings,
+        }
+
+
+@dataclass(slots=True)
+class CompanyReport:
+    """A report catalogue row; the report contents are intentionally not parsed."""
+
+    report_type: str
+    period_ended: str | None
+    posting_date: str | None
+    url: str | None
+    source: str | None = None
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class ListingStatus:
+    """One row from a PSX listing-segment table."""
+
+    symbol: str
+    name: str
+    sector: str
+    segment: str
+    clearing_type: str | None
+    shares: int | None
+    free_float: int | None
+    listed_in: list[str]
+    non_compliance: str | None
+    source: str | None = None
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class AlertEvidence:
+    """Company-specific evidence supporting or qualifying an alert state."""
+
+    kind: str
+    label: str
+    raw_text: str | None
+    url: str | None
+    source: str | None = None
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class CompanyAlerts:
+    """Current compliance evidence with tri-state alert semantics."""
+
+    symbol: str
+    as_of: str
+    listing_segment: str | None
+    status_tags: list[dict]
+    non_compliance: dict
+    rwa: dict
+    suspension: dict
+    winding_up: dict
+    sources: list[str]
+    warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)

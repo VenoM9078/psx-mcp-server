@@ -9,6 +9,23 @@ All notable changes to this project are documented here. The format is based on
 ### Added
 - Separate `psx-mcp-http` entry point for unauthenticated Streamable HTTP access to the
   existing read-only server; the default stdio entry point is unchanged.
+- Structured company financial summaries/ratios, official report discovery, evidence-based
+  compliance alerts, and close-only price-performance analytics.
+
+### Changed
+- Preserve signed quote changes, add source/freshness metadata, make market breadth scope
+  explicit, globally sort announcements before truncation, and classify payout notation without
+  assuming a face value or converting percentages into DPS.
+- Targeted correctness repair: financial grids now fail closed on ambiguous alignment, unknown
+  financial rows are not scaled, Sales keeps the `sales` metric, and report/year/URL parsing is
+  explicit and bounded.
+- Targeted correctness repair: performance windows use calendar arithmetic, maximum close-to-close
+  drawdown is now a negative loss percentage, benchmark-relative returns require exact effective
+  date alignment, and stock analytics survive benchmark failure.
+- Targeted correctness repair: DC/non-compliance evidence is separate from RWA, suspension and
+  winding-up remain unknown without affirmative evidence, alert sources degrade independently,
+  announcement attribution requires an exact returned symbol, and cache freshness distinguishes
+  upstream fetch time from response service time.
 
 ## [0.1.0] - 2026-07-07
 
